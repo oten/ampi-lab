@@ -46,7 +46,7 @@
 
 <h3>Sleep</h3>
 
-<p>O primeio exemplo de código usa a função <code>unsigned int sleep(unsigned int)</code> da <code>unistd.h</code> para gerar um desbalanceamento artificial.</p>
+<p>O primeio exemplo de código usa a função <code>.. sleep(..)</code> da <code>unistd.h</code> para gerar um desbalanceamento artificial.</p>
 
 <div class="highlight highlight-C"><pre>#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>stdio.h<span class="pl-pds">&gt;</span></span>
 #<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>unistd.h<span class="pl-pds">&gt;</span></span>
@@ -95,9 +95,9 @@ light rank 6 from 3 to 3
 light rank 7 from 3 to 0
 </code></pre>
 
-<p>A interpretação da primeira linha, por exemplo, é: O rank pesado de id '0' migrou do elemento de processamento de id 0 para o elemento de processamento de id '3'. É importante notar que o log de <em>todos os ranks</em> são listados, mesmo os que não migraram.</p>
+<p>A interpretação da primeira linha, por exemplo, é: O rank pesado de id '0' migrou do elemento de processamento de id '0' para o elemento de processamento de id '3'. É importante notar que o log de <em>todos os ranks</em> são listados, mesmo os que não migraram.</p>
 
-<p>Um dos principais objetivos desse experimento é verificar se o balanceador GreedyLB se comporta da mesma forma em repetidas execuções com a mesma configuração de desbalanceamento, número de elementos de processamento (PE's) e de processos virutais (VP's).</p>
+<p>Um dos principais objetivos desse experimento é verificar se o balanceador GreedyLB se comporta da mesma forma em repetidas execuções com a mesma configuração de desbalanceamento, mesmo número de elementos de processamento (PE's) e mesmo número de processos virutais (VP's).</p>
 
 <p>Executando o programa <code>./sleep</code> 5 vezes da seguinte forma:</p>
 
@@ -118,7 +118,7 @@ light rank 6 from 3 to 1    light rank 6 from 3 to 1    light rank 6 from 3 to 2
 light rank 7 from 3 to 0    light rank 7 from 3 to 2    light rank 7 from 3 to 0    light rank 7 from 3 to 3    light rank 7 from 3 to 2
 </code></pre>
 
-<p>Para esse experimento, o GreedyLB apresentou comportamento não reprodutível. Observando apenas os ranks 0 e 1 é possível verificar que em algumas execuções eles migram de PE e em outra permanecem no mesmo.</p>
+<p>Para esse experimento, o GreedyLB apresentou comportamentos diferentes a cada execução. Observando apenas os ranks 0 e 1 é possível verificar que em algumas execuções eles migram de PE e em outra permanecem no mesmo.</p>
 
 <p>Para melhorar a visulização podemos usar os scripts <a href="https://github.com/oten/ampi-lab/blob/master/min/balancing.awk"><code>balancing.awk</code></a> e o <a href="https://github.com/oten/ampi-lab/blob/master/min/fromto.awk"><code>fromto.awk</code></a> (além do <a href="https://github.com/oten/ampi-lab/blob/master/min/f2.awk"><code>f2.awk</code></a>, uma versão menos verbosa do <code>fromto.awk</code> ideal para ser usada com o comando <code>paste</code>) . Seguem os exemplos:</p>
 
