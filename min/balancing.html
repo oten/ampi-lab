@@ -42,9 +42,11 @@
                     <div class="comment-body markdown-body markdown-format">
                       <h2>Balanceador GreedyLB</h2>
 
-<p>A proposta desse experimento é exemplificar o uso e funcionamento do balanceador GreedyLB utilizando códigos simples e autocontidos. Além dos códigos contendo desbalanceamento também são apresentados scripts para facilitar a visualização. </p>
+<p>A proposta desse experimento é exemplificar o uso e funcionamento do balanceador GreedyLB utilizando códigos simples e autocontidos. Além dos códigos também são apresentados scripts para facilitar a visualização das migrações a partir dos logs gerados.</p>
 
-<p>O primeio exemplo de código usa a função <code>sleep</code> da <code>unistd.h</code> para gerar um desbalanceamento artificial.</p>
+<h3>Sleep</h3>
+
+<p>O primeio exemplo de código usa a função <code>unsigned int sleep(unsigned int)</code> da <code>unistd.h</code> para gerar um desbalanceamento artificial.</p>
 
 <div class="highlight highlight-C"><pre>#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>stdio.h<span class="pl-pds">&gt;</span></span>
 #<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>unistd.h<span class="pl-pds">&gt;</span></span>
@@ -93,11 +95,11 @@ light rank 6 from 3 to 3
 light rank 7 from 3 to 0
 </code></pre>
 
-<p>A saía é simples de entender. Na primeira coluna é informado se aquele <code>rank</code> é leve, <code>light</code>, ou pesado, <code>heavy</code>. Na terceira, quita e sétima colunas temos o <code>id</code> do <code>rank</code>, o <code>id</code> do Process Element (PE) de origem e o <code>id</code> do PE de destino.</p>
+<p>A interpretação da primeira linha, por exemplo, é: O rank pesado de id '0' migrou do elemento de processamento de id 0 para o elemento de processamento de id '3'. É importante notar que o log de <em>todos os ranks</em> são listados, mesmo os que não migraram.</p>
 
-<p>Um dos principais objetivos desse experimento é verificar se o balanceador GreedyLB se comporta de forma estável em repetidas execuções com a mesma configuração de desbalanceamento, número de PE's e de processos virutais (PV's).</p>
+<p>Um dos principais objetivos desse experimento é verificar se o balanceador GreedyLB se comporta da mesma forma em repetidas execuções com a mesma configuração de desbalanceamento, número de elementos de processamento (PE's) e de processos virutais (VP's).</p>
 
-<p>Executando o <code>sleep</code> 5 vezes da seguinte forma:</p>
+<p>Executando o programa <code>./sleep</code> 5 vezes da seguinte forma:</p>
 
 <pre><code>$ for i in `seq 1 5`;do ./charmrun +p4 +vp8 ./sleep +balancer GreedyLB 2&gt;log$i.txt;done
 </code></pre>
@@ -116,9 +118,9 @@ light rank 6 from 3 to 1    light rank 6 from 3 to 1    light rank 6 from 3 to 2
 light rank 7 from 3 to 0    light rank 7 from 3 to 2    light rank 7 from 3 to 0    light rank 7 from 3 to 3    light rank 7 from 3 to 2
 </code></pre>
 
-<p>Humm... pode-se dizer de cara, que: para esse experimento, o GreedyLB apresentou comportamento não reprodutível. Observando apenas os ranks 0 e 1 é possível verificar que em algumas execuções eles migram de PE e em outra permanecem no mesmo.</p>
+<p>Para esse experimento, o GreedyLB apresentou comportamento não reprodutível. Observando apenas os ranks 0 e 1 é possível verificar que em algumas execuções eles migram de PE e em outra permanecem no mesmo.</p>
 
-<p>Para melhorar a visulização podemos usar os scripts <code>balancing.awk</code> e o <code>fromto.awk</code> (além do <code>f2.awk</code>, uma versão menos verbosa do <code>fromto.awk</code>) . Seguem os exemplos:</p>
+<p>Para melhorar a visulização podemos usar os scripts <a href="https://github.com/oten/ampi-lab/blob/master/min/balancing.awk"><code>balancing.awk</code></a> e o <a href="https://github.com/oten/ampi-lab/blob/master/min/fromto.awk"><code>fromto.awk</code></a> (além do <a href="https://github.com/oten/ampi-lab/blob/master/min/f2.awk"><code>f2.awk</code></a>, uma versão menos verbosa do <code>fromto.awk</code> ideal para ser usada com o comando <code>paste</code>) . Seguem os exemplos:</p>
 
 <pre><code>$ ./balancing.awk log1.txt
 0: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>
@@ -141,6 +143,8 @@ $ ./f2.awk log1.txt
 3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 1
 2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span> 3
 1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span> 3
+
+
 </code></pre>
 
 <p>O <code>balancing.awk</code> mostra a distribuição inicial e final dos processos leves e pesados, o <code>fromto.awk</code> / <code>f2.awk</code> mostra as migrações no formato 'origem -&gt;[ rank ]-&gt; destino'.</p>
@@ -155,6 +159,7 @@ $ ./f2.awk log1.txt
 2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span> 0	2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span> 3	3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 1	2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span> 0	3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 2
 3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 1	3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 2	3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span> 0	3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span> 2	
 3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span> 2	3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span> 0
+
 </code></pre>
 
 <p>Os balanceamentos:</p>
@@ -191,6 +196,246 @@ log5.txt
 3: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span>
 
 </code></pre>
+
+<h3>Count Primes</h3>
+
+<p>No primeiro exemplo vimos um programa com desbalanceamento forçado pelo tempo de sleep e os testes foram executados em um notebook comum. Nesse segundo experimento é proposto um programa com desbalanceamento provocado por tempo de processamento. A função principal é mantida para mater a simplicidade e coerência com o primeiro experiemento. No entanto, ao invés de esperar em sleep, os processos sobrecarregados calculam a quantidade de números primos até um determinado limite. Segue o código:</p>
+
+<div class="highlight highlight-C"><pre>#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>stdio.h<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>unistd.h<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">"</span>mpi.h<span class="pl-pds">"</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">"</span>charm.h<span class="pl-pds">"</span></span>
+
+#<span class="pl-k">define</span> <span class="pl-en">BRANCH</span> (rank &lt; comm_size / <span class="pl-c1">2</span>)
+
+<span class="pl-k">int</span>
+<span class="pl-en">count_primes</span>(<span class="pl-k">unsigned</span> <span class="pl-k">long</span> <span class="pl-k">int</span> bound)
+{
+    <span class="pl-k">unsigned</span> <span class="pl-k">long</span> <span class="pl-k">int</span> n, d, count = <span class="pl-c1">0</span>;
+    <span class="pl-k">for</span> (n = <span class="pl-c1">2</span>; n &lt;= bound; n++) {
+        <span class="pl-k">for</span> (d = <span class="pl-c1">2</span>; d &lt; n; d++) {
+            <span class="pl-k">if</span> ( n % d == <span class="pl-c1">0</span> ) {
+                count ++;
+                <span class="pl-k">break</span>;
+            }
+        }
+    }
+    <span class="pl-k">return</span> count;
+}
+
+<span class="pl-k">int</span>
+<span class="pl-en">main</span>(<span class="pl-k">int</span> argc, <span class="pl-k">char</span> *argv[])
+{
+    <span class="pl-k">int</span> rank, comm_size;
+    <span class="pl-c1">MPI_Init</span>(&amp;argc, &amp;argv);
+    <span class="pl-c1">MPI_Comm_rank</span>(MPI_COMM_WORLD, &amp;rank);
+    <span class="pl-c1">MPI_Comm_size</span>(MPI_COMM_WORLD, &amp;comm_size);
+
+    <span class="pl-k">int</span> i, pe_before, pe_after;
+
+    <span class="pl-k">if</span> (BRANCH)
+        <span class="pl-c1">printf</span>(<span class="pl-s"><span class="pl-pds">"</span><span class="pl-c1">%u</span><span class="pl-cce">\n</span><span class="pl-pds">"</span></span>, <span class="pl-c1">count_primes</span>(<span class="pl-c1">100000</span>));
+    <span class="pl-k">else</span>
+        <span class="pl-c1">printf</span>(<span class="pl-s"><span class="pl-pds">"</span><span class="pl-c1">%u</span><span class="pl-cce">\n</span><span class="pl-pds">"</span></span>, <span class="pl-c1">count_primes</span>(<span class="pl-c1">50000</span>));
+
+    pe_before = <span class="pl-c1">CkMyPe</span>();
+    <span class="pl-c1">MPI_Migrate</span>();
+    pe_after = <span class="pl-c1">CkMyPe</span>();
+
+    <span class="pl-c1">fprintf</span>(stderr, <span class="pl-s"><span class="pl-pds">"</span><span class="pl-c1">%s</span> rank <span class="pl-c1">%d</span> from <span class="pl-c1">%d</span> to <span class="pl-c1">%d</span><span class="pl-cce">\n</span><span class="pl-pds">"</span></span>, 
+        BRANCH?<span class="pl-s"><span class="pl-pds">"</span>heavy<span class="pl-pds">"</span></span>:<span class="pl-s"><span class="pl-pds">"</span>light<span class="pl-pds">"</span></span>, rank, pe_before, pe_after);
+    <span class="pl-c1">MPI_Finalize</span>();
+    <span class="pl-k">return</span> <span class="pl-c1">0</span>;
+}
+</pre></div>
+
+<p>Dessa vez as rodadas são executadas em um ambiente próprio para esse tipo de experimento, com fila de submissão e etc...</p>
+
+<p>Scritp de submissão:</p>
+
+<pre><code>#! /bin/sh
+#PBS -l select=4:ncpus=1:mpiprocs=1
+#PBS -l place=scatter
+#PBS -l walltime=02:00:00
+#PBS -j oe
+#PBS -q gpu_nodes
+#PBS -N Static-Test
+cd $PBS_O_WORKDIR
+
+for i in `seq 1 15`; do aprun -n 4 -N 1 ./count_primes +vp8 +balancer GreedyLB 2&gt; log$i.txt;done
+</code></pre>
+
+<p>Logs:</p>
+
+<pre><code>$ paste log*
+heavy rank 2 from 1 to 2    heavy rank 2 from 1 to 2    light rank 4 from 2 to 1    heavy rank 2 from 1 to 2    heavy rank 0 from 0 to 3    heavy rank 2 from 1 to 3    light rank 4 from 2 to 0    light rank 4 from 2 to 0    heavy rank 2 from 1 to 2    heavy rank 0 from 0 to 3    light rank 6 from 3 to 1    light rank 4 from 2 to 0    light rank 6 from 3 to 0    heavy rank 2 from 1 to 2    light rank 6 from 3 to 0
+heavy rank 0 from 0 to 3    heavy rank 0 from 0 to 3    heavy rank 2 from 1 to 2    light rank 4 from 2 to 0    light rank 4 from 2 to 0    light rank 7 from 3 to 3    heavy rank 3 from 1 to 0    heavy rank 1 from 0 to 0    light rank 4 from 2 to 0    heavy rank 2 from 1 to 2    heavy rank 0 from 0 to 3    heavy rank 1 from 0 to 0    light rank 4 from 2 to 1    heavy rank 0 from 0 to 3    heavy rank 1 from 0 to 0
+light rank 4 from 2 to 0    light rank 6 from 3 to 1    light rank 6 from 3 to 0    heavy rank 3 from 1 to 0    heavy rank 1 from 0 to 0    light rank 6 from 3 to 1    heavy rank 0 from 0 to 3    heavy rank 2 from 1 to 2    heavy rank 3 from 1 to 0    light rank 4 from 2 to 1    light rank 4 from 2 to 0    light rank 6 from 3 to 1    heavy rank 1 from 0 to 0    light rank 6 from 3 to 1    light rank 4 from 2 to 1
+heavy rank 3 from 1 to 0    light rank 4 from 2 to 0    heavy rank 0 from 0 to 3    heavy rank 0 from 0 to 3    heavy rank 2 from 1 to 2    heavy rank 0 from 0 to 2    light rank 6 from 3 to 1    light rank 5 from 2 to 2    heavy rank 0 from 0 to 3    light rank 6 from 3 to 0    heavy rank 1 from 0 to 0    heavy rank 0 from 0 to 3    heavy rank 3 from 1 to 1    light rank 4 from 2 to 0    heavy rank 0 from 0 to 3
+light rank 6 from 3 to 1    heavy rank 3 from 1 to 0    heavy rank 3 from 1 to 0    light rank 6 from 3 to 1    light rank 5 from 2 to 2    light rank 4 from 2 to 0    heavy rank 2 from 1 to 2    heavy rank 0 from 0 to 3    light rank 6 from 3 to 1    heavy rank 3 from 1 to 0    heavy rank 2 from 1 to 2    heavy rank 2 from 1 to 2    heavy rank 0 from 0 to 3    heavy rank 3 from 1 to 0    light rank 5 from 2 to 3
+light rank 5 from 2 to 2    light rank 5 from 2 to 2    heavy rank 1 from 0 to 1    light rank 7 from 3 to 2    light rank 7 from 3 to 3    heavy rank 1 from 0 to 0    light rank 5 from 2 to 3    light rank 7 from 3 to 3    light rank 7 from 3 to 2    light rank 5 from 2 to 2    heavy rank 3 from 1 to 1    heavy rank 3 from 1 to 1    heavy rank 2 from 1 to 2    light rank 5 from 2 to 2    heavy rank 2 from 1 to 2
+light rank 7 from 3 to 3    light rank 7 from 3 to 3    light rank 7 from 3 to 2    light rank 5 from 2 to 3    light rank 6 from 3 to 1    heavy rank 3 from 1 to 1    heavy rank 1 from 0 to 1    light rank 6 from 3 to 1    light rank 5 from 2 to 3    light rank 7 from 3 to 3    light rank 5 from 2 to 2    light rank 5 from 2 to 3    light rank 7 from 3 to 2    light rank 7 from 3 to 3    light rank 7 from 3 to 2
+heavy rank 1 from 0 to 1    heavy rank 1 from 0 to 1    light rank 5 from 2 to 3    heavy rank 1 from 0 to 1    heavy rank 3 from 1 to 1    light rank 5 from 2 to 2    light rank 7 from 3 to 2    heavy rank 3 from 1 to 1    heavy rank 1 from 0 to 1    heavy rank 1 from 0 to 1    light rank 7 from 3 to 3    light rank 7 from 3 to 2    light rank 5 from 2 to 3    heavy rank 1 from 0 to 1    heavy rank 3 from 1 to 1
+</code></pre>
+
+<p>Migrações e balanceamentos em cada rodada:</p>
+
+<pre><code>$ for i in `seq 1 15`;do echo "Rodada $i"; sort -nk5 log$i.txt | ./f2.awk >f.term; ./balancing.awk log$i.txt >b.term; paste f.term b.term ; echo ; echo; done
+Rodada 1
+Migração      Balanceamento
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span> 3	0: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span> 1	1: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span> 2	2: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span> 0	3: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span> 0	
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 1	
+
+
+Rodada 2
+Migração      Balanceamento
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span> 3	0: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span> 2	1: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span> 0	2: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 1	3: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>
+
+
+Rodada 3
+Migração      Balanceamento
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span> 3	0: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span> 1	1: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span> 2	2: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span> 0	3: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span> 0	
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span> 3	
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 1	
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span> 2	
+
+
+Rodada 4
+Migração      Balanceamento
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span> 3	0: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span> 1	1: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span> 2	2: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span> 0	3: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span> 1	
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 0	
+
+
+Rodada 5
+Migração      Balanceamento
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span> 3	0: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span> 2	1: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span> 0	2: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 1	3: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>
+
+
+Rodada 6
+Migração      Balanceamento
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span> 3	0: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span> 2	1: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span> 0	2: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span> 3	3: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 1	
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span> 2	
+
+
+Rodada 7
+Migração      Balanceamento
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span> 3	0: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span> 2	1: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span> 1	2: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span> 3	3: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 0	
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span> 2	
+
+
+Rodada 8
+Migração      Balanceamento
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span> 3	0: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span> 1	1: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span> 2	2: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span> 0	3: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span> 0	
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 1	
+
+
+Rodada 9
+Migração      Balanceamento
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span> 3	0: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span> 2	1: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span> 1	2: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span> 3	3: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 0	
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span> 2	
+
+
+Rodada 10
+Migração      Balanceamento
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span> 3	0: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span> 1	1: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span> 2	2: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span> 0	3: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span> 0	
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 1	
+
+
+Rodada 11
+Migração      Balanceamento
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span> 3	0: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span> 1	1: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span> 2	2: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span> 0	3: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span> 1	
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span> 3	
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 0	
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span> 2	
+
+
+Rodada 12
+Migração      Balanceamento
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span> 3	0: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span> 1	1: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span> 2	2: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span> 0	3: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span> 0	
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span> 3	
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 1	
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span> 2	
+
+
+Rodada 13
+Migração      Balanceamento
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span> 3	0: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span> 2	1: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span> 0	2: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 1	3: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>
+
+
+Rodada 14
+Migração      Balanceamento
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span> 2	0: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span> 3	1: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span> 0	2: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 1	3: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>
+
+
+Rodada 15
+Migração      Balanceamento
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span> 3	0: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span>
+0 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span> 1	1: <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">1</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span> 2	2: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">2</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>
+1 <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">3</span> 0	3: <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span>  |Balancer|  <span style="color:white;"></span><span style="color:white;background-color:red;font-weight:bold;">0</span><span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span>
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">4</span> 0	
+2 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">5</span> 3	
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">6</span> 1	
+3 <span style="color:white;"></span><span style="color:white;background-color:blue;font-weight:bold;">7</span> 2	
+
+
+</code></pre>
+
+<h3>Conclusões</h3>
+
+<p>Em ambos os casos o GreedyLB se mostrou muito eficiente no balanceamento porém com comportamento imprevisível. Ao menos nesses experimentos, dentre as inúmeras possibilidades de migrações para se chegar ao balanceamento ótimo, não foi possível prever com exatidão qual a sequência de migração, quais ranks serão migrados ou quais os PE's serão os destinos. </p>
                     </div>
                   </div>
                 </div>
