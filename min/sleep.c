@@ -24,7 +24,8 @@ main(int argc, char *argv[])
     MPI_Migrate();
     pe_after = CkMyPe();
     
-    fprintf(stderr, "%s rank %d from %d to %d\n", BRANCH?"heavy":"light", rank, pe_before, pe_after);
+    fprintf(stderr, "%s rank %d from %d to %d\n", 
+    	BRANCH?"heavy":"light", rank, pe_before, pe_after);
     MPI_Finalize();
     return 0;
 }
